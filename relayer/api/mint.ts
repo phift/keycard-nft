@@ -12,11 +12,14 @@ import { mainnet } from "viem/chains";
 import { applyCors } from "./_cors";
 import { PSK26_ABI } from "./_abi";
 import { getValue, incrValue, setValue } from "./_store";
-import { getTapKey, readJsonBody } from "./_utils";
+import { getClientIp, getTapKey, readJsonBody } from "./_utils";
 
 const MAX_MINTS_PER_ADDRESS = 3;
 const REQUEST_PREFIX = "psk26:req:";
 const COUNT_PREFIX = "psk26:count:";
+const RATE_PREFIX = "psk26:rate:";
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_MAX = 120;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) {
@@ -33,6 +36,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!tapKeyExpected || tapKey !== tapKeyExpected) {
     res.status(403).json({ error: "Invalid tap key" });
     return;
+  }
+
+  const clientIp = getClientIp(req);
+  const rateKey = `${RATE_PREFIX}${clientIp}`;
+  const now = Date.now();
+  const rateState =
+    (await getValue<{ count: number; resetAt: number }>(rateKey)) || null;
+  if (!rateState || now > rateState.resetAt) {
+    await setValue(rateKey, { count: 1, resetAt: now + RATE_WINDOW_MS });
+  } else if (rateState.count >= RATE_MAX) {
+    res.status(429).json({ error: "Rate limit exceeded. Try again shortly." });
+    return;
+  } else {
+    await setValue(rateKey, {
+      count: rateState.count + 1,
+      resetAt: rateState.resetAt
+    });
   }
 
   const body = await readJsonBody(req);

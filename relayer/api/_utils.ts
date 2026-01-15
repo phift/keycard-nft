@@ -29,3 +29,25 @@ export function getTapKey(req: IncomingMessage): string {
   const queryValue = url.searchParams.get("k") || "";
   return (headerValue as string) || queryValue || "";
 }
+
+export function getClientIp(req: IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length) {
+    return forwarded.split(",")[0].trim();
+  }
+  if (Array.isArray(forwarded) && forwarded.length) {
+    return forwarded[0].trim();
+  }
+
+  const cfIp = req.headers["cf-connecting-ip"];
+  if (typeof cfIp === "string" && cfIp.length) {
+    return cfIp;
+  }
+
+  const realIp = req.headers["x-real-ip"];
+  if (typeof realIp === "string" && realIp.length) {
+    return realIp;
+  }
+
+  return req.socket?.remoteAddress || "unknown";
+}

@@ -38,7 +38,7 @@ npm run set-uri:status
 - `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_URL` (Vercel KV)
 3) Deploy. Note the Vercel URL, e.g. `https://your-relayer.vercel.app`.
 
-The relayer enforces a TAP_KEY gate and allows **max 3 mints per recipient address** (lifetime).
+The relayer enforces a TAP_KEY gate, rate limits by IP, and allows **max 3 mints per recipient address** (lifetime).
 
 ## Site (GitHub Pages)
 1) Update `site/public/config.json` with:
