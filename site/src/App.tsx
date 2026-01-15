@@ -114,10 +114,7 @@ export default function App() {
         setResolveStatus("resolving");
         try {
           const res = await fetch(
-            `${config.apiBaseUrl}/api/resolve?name=${encodeURIComponent(value)}`,
-            {
-              headers: tapKey ? { "x-tap-key": tapKey } : undefined
-            }
+            `${config.apiBaseUrl}/api/resolve?name=${encodeURIComponent(value)}`
           );
           if (!res.ok) {
             setResolveStatus("error");
@@ -161,7 +158,6 @@ export default function App() {
   const canMint =
     Boolean(config) &&
     !configError &&
-    Boolean(tapKey) &&
     !mintedRecord &&
     resolveStatus === "resolved" &&
     Boolean(resolvedAddress);
@@ -171,7 +167,7 @@ export default function App() {
       return;
     }
     if (!tapKey) {
-      setMintError("Missing tap key. Please tap the NFC tag again.");
+      setMintError("This link is missing access. Please use the booth link.");
       return;
     }
 
@@ -264,12 +260,6 @@ export default function App() {
 
         {configError && (
           <div className="notice error">Configuration error: {configError}</div>
-        )}
-
-        {!tapKey && !mintedRecord && (
-          <div className="notice warning">
-            Missing tap key. Please tap the NFC tag to open this page.
-          </div>
         )}
 
         {mintedRecord ? (
