@@ -1,0 +1,6 @@
+{
+  "apiBaseUrl": "https://your-relayer.vercel.app",
+  "chainId": 1660990954,
+  "contractAddress": "",
+  "explorerBaseUrl": "https://sepoliascan.status.network"
+}
