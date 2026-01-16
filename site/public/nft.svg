@@ -1,94 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <defs>
-    <radialGradient id="bg" cx="30%" cy="20%" r="90%">
-      <stop offset="0" stop-color="#0B1B3A" />
-      <stop offset="0.5" stop-color="#090B12" />
-      <stop offset="1" stop-color="#05060A" />
-    </radialGradient>
+  <rect width="1024" height="1024" fill="#ffffff" />
 
-    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#00F5C8" />
-      <stop offset="0.5" stop-color="#00A3FF" />
-      <stop offset="1" stop-color="#7C3AED" />
-    </linearGradient>
-
-    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.12" />
-      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.05" />
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.02" />
-    </linearGradient>
-
-    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
-      <path d="M80 0H0V80" fill="none" stroke="#A7B0FF" stroke-opacity="0.08" stroke-width="1" />
-      <path d="M40 0V80M0 40H80" fill="none" stroke="#A7B0FF" stroke-opacity="0.05" stroke-width="1" />
-    </pattern>
-
-    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="6" result="b" />
-      <feColorMatrix in="b" type="matrix"
-        values="1 0 0 0 0
-                0 1 0 0 0
-                0 0 1 0 0
-                0 0 0 0.7 0" result="g" />
-      <feMerge>
-        <feMergeNode in="g" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-
-    <filter id="noise" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
-      <feColorMatrix type="matrix"
-        values="0 0 0 0 0
-                0 0 0 0 0
-                0 0 0 0 0
-                0 0 0 0.08 0" />
-    </filter>
-  </defs>
-
-  <rect width="1024" height="1024" fill="url(#bg)" />
-  <rect width="1024" height="1024" fill="url(#grid)" />
-  <rect width="1024" height="1024" filter="url(#noise)" />
-
-  <!-- NFC waves -->
-  <g fill="none" stroke="url(#neon)" stroke-linecap="round" filter="url(#softGlow)" opacity="0.95">
-    <path d="M770 520c70-70 70-184 0-254" stroke-width="10" />
-    <path d="M810 560c96-96 96-250 0-346" stroke-width="8" opacity="0.75" />
-    <path d="M850 600c122-122 122-316 0-438" stroke-width="6" opacity="0.55" />
+  <g transform="translate(234 150) scale(2)">
+    <path d="M168.949 226.276L148.183 196.282L141.953 203.522V226.276H123.264V121.299H141.953V180.251H142.992L165.834 153.361H187.639L160.643 184.389L189.196 226.276H168.949Z" fill="#010101" />
+    <path d="M132.089 138.36C108.209 138.36 89 118.709 89 94.9214C89 71.1337 108.209 52 132.089 52C155.97 52 175.179 71.1337 175.179 94.9214C175.698 118.709 155.97 138.36 132.089 138.36ZM132.089 69.0652C117.553 69.0652 106.132 80.9591 106.132 94.9214C106.132 109.401 118.072 120.778 132.089 120.778C146.626 120.778 158.047 108.884 158.047 94.9214C158.566 80.9591 146.626 69.0652 132.089 69.0652Z" fill="#010101" />
   </g>
 
-  <!-- Card -->
-  <g filter="url(#softGlow)">
-    <rect x="130" y="200" width="764" height="624" rx="44" fill="url(#glass)" stroke="url(#neon)" stroke-opacity="0.85" stroke-width="2" />
-    <rect x="160" y="230" width="704" height="564" rx="34" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1" />
-  </g>
+  <text
+    x="512"
+    y="770"
+    text-anchor="middle"
+    font-family="Space Grotesk, Futura, Avenir Next, Avenir, Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="44"
+    font-weight="700"
+    letter-spacing="3"
+    fill="#0a0a0a"
+  >
+    PARALLEL SOCIETY X KEYCARD
+  </text>
 
-  <!-- Chip -->
-  <g opacity="0.95">
-    <rect x="205" y="325" width="180" height="140" rx="18" fill="#0B1020" stroke="url(#neon)" stroke-opacity="0.7" />
-    <path d="M230 355h130M230 395h130M230 435h130" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="2" />
-    <circle cx="368" cy="405" r="8" fill="#00F5C8" opacity="0.8" />
-  </g>
+  <text
+    x="512"
+    y="835"
+    text-anchor="middle"
+    font-family="Space Grotesk, Futura, Avenir Next, Avenir, Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="16"
+    letter-spacing="3"
+    fill="#5a5a5a"
+  >
+    PS.LOGOS.CO
+  </text>
 
-  <!-- Arc mark -->
-  <g>
-    <path d="M300 610c80-130 190-175 330-155 70 10 130 48 175 112"
-          fill="none" stroke="url(#neon)" stroke-width="10" stroke-linecap="round" opacity="0.85" filter="url(#softGlow)" />
-    <path d="M330 650c78-95 170-128 275-112 60 9 108 35 148 78"
-          fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="6" stroke-linecap="round" />
-  </g>
-
-  <!-- Text -->
-  <g font-family="Space Grotesk, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial" fill="#EAF0FF">
-    <text x="200" y="520" font-size="42" font-weight="700" letter-spacing="2">PARALLEL SOCIETY X KEYCARD</text>
-    <text x="200" y="565" font-size="24" font-weight="600" opacity="0.88" letter-spacing="6">PSK26</text>
-
-    <text x="200" y="710" font-size="22" font-weight="600" opacity="0.92">ps.logos.co</text>
-    <text x="200" y="748" font-size="18" opacity="0.8">LISBON | 6-7 MARCH 2026</text>
-
-    <text x="200" y="792" font-size="14" opacity="0.65" letter-spacing="2">TAP MINT KEEP</text>
-  </g>
-
-  <!-- Corner accent -->
-  <path d="M894 200v120c0 16-13 29-29 29H746" fill="none" stroke="url(#neon)" stroke-opacity="0.65" stroke-width="3" />
+  <text
+    x="512"
+    y="865"
+    text-anchor="middle"
+    font-family="Space Grotesk, Futura, Avenir Next, Avenir, Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="14"
+    letter-spacing="2"
+    fill="#7a7a7a"
+  >
+    LISBON | 6-7 MARCH 2026
+  </text>
 </svg>
