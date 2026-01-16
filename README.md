@@ -8,6 +8,7 @@ Tap-to-mint ERC-721 giveaway for Parallel Society x Keycard 2026.
 - `site/` Static Vite site for GitHub Pages
 
 ## Contracts (Status Network Testnet)
+Requires Node.js 20 LTS (Hardhat does not support Node 25).
 1) Install deps:
 ```
 cd contracts

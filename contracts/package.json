@@ -17,5 +17,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.6"
+  },
+  "volta": {
+    "node": "20.20.0"
   }
 }
