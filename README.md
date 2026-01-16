@@ -35,10 +35,11 @@ npm run set-uri:status
 2) Configure env vars (see `relayer/.env.example`). Required:
 - `STATUS_RPC_URL`, `STATUS_CHAIN_ID`, `CONTRACT_ADDRESS`, `RELAYER_PRIVATE_KEY`, `TAP_KEY`
 - `MAINNET_RPC_URL` (for ENS resolution)
-- `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_URL` (Vercel KV)
 3) Deploy. Note the Vercel URL, e.g. `https://your-relayer.vercel.app`.
 
-The relayer enforces a TAP_KEY gate, rate limits by IP, and allows **max 3 mints per recipient address** (lifetime).
+Optional: attach a KV store (Vercel KV / Upstash) so rate limits and requestId caching persist across serverless instances.
+
+The relayer enforces a TAP_KEY gate and rate limits by IP. The contract enforces **max 3 mints per recipient address** (lifetime).
 
 ## Site (GitHub Pages)
 1) Update `site/public/config.json` with:

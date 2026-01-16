@@ -20,13 +20,3 @@ export async function setValue(key: string, value: unknown): Promise<void> {
   }
   memoryStore.set(key, value);
 }
-
-export async function incrValue(key: string): Promise<number> {
-  if (hasKvConfig) {
-    return kv.incr(key);
-  }
-  const current = (memoryStore.get(key) as number) ?? 0;
-  const next = current + 1;
-  memoryStore.set(key, next);
-  return next;
-}

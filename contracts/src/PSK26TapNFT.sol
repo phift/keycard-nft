@@ -9,8 +9,11 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 contract PSK26TapNFT is ERC721, Ownable, Pausable {
     using Counters for Counters.Counter;
 
+    uint256 public constant MAX_MINTS_PER_ADDRESS = 3;
+
     Counters.Counter private _tokenIdCounter;
     string private _tokenURIValue;
+    mapping(address => uint256) private _mintedTo;
 
     event Minted(address indexed to, uint256 indexed tokenId);
 
@@ -24,8 +27,10 @@ contract PSK26TapNFT is ERC721, Ownable, Pausable {
 
     function mintTo(address to) external onlyOwner whenNotPaused returns (uint256) {
         require(to != address(0), "Invalid recipient");
+        require(_mintedTo[to] < MAX_MINTS_PER_ADDRESS, "Mint limit reached");
         _tokenIdCounter.increment();
         uint256 tokenId = _tokenIdCounter.current();
+        _mintedTo[to] += 1;
         _safeMint(to, tokenId);
         emit Minted(to, tokenId);
         return tokenId;

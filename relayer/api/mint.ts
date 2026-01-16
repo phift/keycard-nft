@@ -11,12 +11,10 @@ import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
 import { applyCors } from "./_cors";
 import { PSK26_ABI } from "./_abi";
-import { getValue, incrValue, setValue } from "./_store";
+import { getValue, setValue } from "./_store";
 import { getClientIp, getTapKey, readJsonBody } from "./_utils";
 
-const MAX_MINTS_PER_ADDRESS = 3;
 const REQUEST_PREFIX = "psk26:req:";
-const COUNT_PREFIX = "psk26:count:";
 const RATE_PREFIX = "psk26:rate:";
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = 120;
@@ -30,6 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
+
+  res.setHeader("Cache-Control", "no-store");
 
   const tapKeyExpected = process.env.TAP_KEY || "";
   const tapKey = getTapKey(req);
@@ -64,8 +64,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(400).json({ error: "recipient is required" });
     return;
   }
+  if (recipientRaw.length > 256) {
+    res.status(400).json({ error: "recipient is too long" });
+    return;
+  }
   if (!requestId) {
     res.status(400).json({ error: "requestId is required" });
+    return;
+  }
+  if (
+    requestId.length < 8 ||
+    requestId.length > 128 ||
+    !/^[A-Za-z0-9-]+$/.test(requestId)
+  ) {
+    res.status(400).json({ error: "requestId is invalid" });
     return;
   }
 
@@ -93,13 +105,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const resolvedAddress = await resolveRecipient(recipientRaw);
   if (!resolvedAddress) {
     res.status(400).json({ error: "Invalid recipient" });
-    return;
-  }
-
-  const countKey = `${COUNT_PREFIX}${resolvedAddress.toLowerCase()}`;
-  const currentCount = (await getValue<number>(countKey)) ?? 0;
-  if (currentCount >= MAX_MINTS_PER_ADDRESS) {
-    res.status(429).json({ error: "Mint limit reached for this address" });
     return;
   }
 
@@ -156,10 +161,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     await setValue(`${REQUEST_PREFIX}${requestId}`, result);
-    await incrValue(countKey);
 
     res.status(200).json(result);
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes("mint limit reached")) {
+      res.status(429).json({ error: "Mint limit reached for this address" });
+      return;
+    }
+    console.error(error);
     res.status(500).json({ error: "Mint failed" });
   }
 

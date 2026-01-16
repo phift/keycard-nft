@@ -28,6 +28,16 @@ describe("PSK26TapNFT", function () {
     );
   });
 
+  it("allows up to 3 mints per recipient", async function () {
+    const { contract, owner } = await deployFixture();
+    await contract.mintTo(owner.address);
+    await contract.mintTo(owner.address);
+    await contract.mintTo(owner.address);
+    await expect(contract.mintTo(owner.address)).to.be.revertedWith(
+      "Mint limit reached"
+    );
+  });
+
   it("respects pause", async function () {
     const { contract, owner } = await deployFixture();
     await contract.pause();
