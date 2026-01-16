@@ -19,6 +19,21 @@ const config: HardhatUserConfig = {
       chainId: 1660990954,
       accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : []
     }
+  },
+  etherscan: {
+    apiKey: {
+      statusTestnet: "empty"
+    },
+    customChains: [
+      {
+        network: "statusTestnet",
+        chainId: 1660990954,
+        urls: {
+          apiURL: "https://sepoliascan.status.network/api",
+          browserURL: "https://sepoliascan.status.network"
+        }
+      }
+    ]
   }
 };
 

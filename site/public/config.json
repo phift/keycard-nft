@@ -2,5 +2,6 @@
   "apiBaseUrl": "https://keycard-nft.vercel.app",
   "chainId": 1660990954,
   "contractAddress": "0xECF0f05E104BdeE30079DB4783FB83CbD33167cE",
-  "explorerBaseUrl": "https://sepoliascan.status.network"
+  "explorerBaseUrl": "https://sepoliascan.status.network",
+  "walletConnectProjectId": ""
 }

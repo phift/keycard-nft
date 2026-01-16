@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import EthereumProvider from "@walletconnect/ethereum-provider";
-import { getAddress, isAddress } from "viem";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createWeb3Modal, useWeb3Modal } from "@web3modal/wagmi/react";
+import { createConfig, WagmiProvider, useAccount, useDisconnect, http } from "wagmi";
+import { injected, walletConnect } from "wagmi/connectors";
+import { defineChain, getAddress, isAddress } from "viem";
 
 type Config = {
   apiBaseUrl: string;
@@ -32,6 +35,22 @@ type NftMetadata = {
   external_url?: string;
 };
 
+const queryClient = new QueryClient();
+const STATUS_RPC_URL = "https://public.sepolia.rpc.status.network";
+const statusTestnet = defineChain({
+  id: 1660990954,
+  name: "Status Network Testnet",
+  network: "status-testnet",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: [STATUS_RPC_URL] },
+    public: { http: [STATUS_RPC_URL] }
+  },
+  blockExplorers: {
+    default: { name: "Status SepoliaScan", url: "https://sepoliascan.status.network" }
+  }
+});
+
 const EVENT_COPY = "ps.logos.co | Lisbon | 6-7 March 2026";
 const TAP_KEY_STORAGE = "psk26:tapKey";
 const METADATA_PATH = "metadata.json";
@@ -53,14 +72,13 @@ export default function App() {
   const [mintedRecord, setMintedRecord] = useState<MintRecord | null>(null);
   const [metadata, setMetadata] = useState<NftMetadata | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [walletStatus, setWalletStatus] = useState<"idle" | "connecting" | "error">("idle");
-  const [walletError, setWalletError] = useState<string | null>(null);
   const [mintedLookup, setMintedLookup] = useState<MintedLookup | null>(null);
   const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "error">("idle");
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [wagmiConfig, setWagmiConfig] = useState<ReturnType<typeof createConfig> | null>(null);
 
   const resolveTimeout = useRef<number | null>(null);
-  const walletConnectRef = useRef<EthereumProvider | null>(null);
+  const modalConfigured = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -104,6 +122,45 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!config?.walletConnectProjectId) {
+      return;
+    }
+    if (modalConfigured.current) {
+      return;
+    }
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const projectId = config.walletConnectProjectId;
+    const metadata = {
+      name: "PSK26 Tap Mint",
+      description: "Parallel Society x Keycard 2026 mint",
+      url: window.location.origin,
+      icons: [`${window.location.origin}/nft.svg`]
+    };
+
+    const nextConfig = createConfig({
+      chains: [statusTestnet],
+      transports: {
+        [statusTestnet.id]: http(STATUS_RPC_URL)
+      },
+      connectors: [
+        injected(),
+        walletConnect({ projectId, metadata, showQrModal: false })
+      ]
+    });
+
+    setWagmiConfig(nextConfig);
+    createWeb3Modal({
+      wagmiConfig: nextConfig,
+      projectId,
+      chains: [statusTestnet]
+    });
+    modalConfigured.current = true;
+  }, [config?.walletConnectProjectId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -343,70 +400,6 @@ export default function App() {
     }
   }
 
-  async function connectInjected() {
-    setWalletStatus("connecting");
-    setWalletError(null);
-    try {
-      const ethereum = (window as Window & { ethereum?: unknown }).ethereum as
-        | { request: (args: { method: string }) => Promise<string[]> }
-        | undefined;
-      if (!ethereum) {
-        throw new Error("No injected wallet found");
-      }
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts?.length) {
-        throw new Error("No accounts returned");
-      }
-      setWalletAddress(getAddress(accounts[0]));
-      setWalletStatus("idle");
-    } catch (error) {
-      setWalletStatus("error");
-      setWalletError(error instanceof Error ? error.message : "Wallet connect failed");
-    }
-  }
-
-  async function connectWalletConnect() {
-    if (!config?.walletConnectProjectId) {
-      setWalletError("WalletConnect is not configured");
-      setWalletStatus("error");
-      return;
-    }
-    setWalletStatus("connecting");
-    setWalletError(null);
-    try {
-      const provider = await EthereumProvider.init({
-        projectId: config.walletConnectProjectId,
-        chains: [config.chainId],
-        showQrModal: true,
-        methods: ["eth_requestAccounts"]
-      });
-      walletConnectRef.current = provider;
-      const accounts = (await provider.request({
-        method: "eth_requestAccounts"
-      })) as string[];
-      if (!accounts?.length) {
-        throw new Error("No accounts returned");
-      }
-      setWalletAddress(getAddress(accounts[0]));
-      setWalletStatus("idle");
-    } catch (error) {
-      setWalletStatus("error");
-      setWalletError(error instanceof Error ? error.message : "WalletConnect failed");
-    }
-  }
-
-  async function disconnectWallet() {
-    if (walletConnectRef.current) {
-      try {
-        await walletConnectRef.current.disconnect();
-      } catch {
-        // ignore
-      }
-      walletConnectRef.current = null;
-    }
-    setWalletAddress(null);
-  }
-
   function resetLocalMint() {
     if (!config) {
       return;
@@ -523,68 +516,17 @@ export default function App() {
             {mintStatus === "success" && !mintError && (
               <div className="notice success">Minted successfully.</div>
             )}
-            <div className="wallet-panel">
-              <div className="wallet-title">Already minted?</div>
-              <div className="wallet-copy">
-                Connect a wallet to check if you already hold PSK26.
-              </div>
-              <div className="wallet-buttons">
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={connectInjected}
-                  disabled={walletStatus === "connecting"}
-                >
-                  {walletStatus === "connecting" ? "Connecting..." : "Connect wallet"}
-                </button>
-                {config?.walletConnectProjectId && (
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={connectWalletConnect}
-                    disabled={walletStatus === "connecting"}
-                  >
-                    WalletConnect
-                  </button>
-                )}
-              </div>
-              {walletAddress && (
-                <div className="wallet-meta">
-                  <span>Connected: {walletAddress}</span>
-                  <button type="button" className="link-button" onClick={disconnectWallet}>
-                    Disconnect
-                  </button>
-                </div>
-              )}
-              {walletError && <div className="notice error">{walletError}</div>}
-              {lookupStatus === "loading" && (
-                <div className="muted">Checking mints...</div>
-              )}
-              {lookupStatus === "error" && lookupError && (
-                <div className="notice error">{lookupError}</div>
-              )}
-              {walletAddress && mintedLookup && mintedLookup.count === 0 && (
-                <div className="notice warning">No mints found for this wallet.</div>
-              )}
-              {walletAddress && mintedLookup && mintedLookup.count > 0 && metadata?.image && (
-                <div className="nft-preview">
-                  <img src={metadata.image} alt={metadata.name || "NFT preview"} />
-                  <div className="nft-details">
-                    <div className="nft-title">{metadata.name || "PSK26 NFT"}</div>
-                    {metadata.description && (
-                      <div className="nft-description">{metadata.description}</div>
-                    )}
-                    <div className="nft-meta">
-                      {mintedLookup.count} mint
-                      {mintedLookup.count === 1 ? "" : "s"} found
-                    </div>
-                    {mintedLookup.lastTokenId && (
-                      <div className="nft-meta">Latest Token ID: {mintedLookup.lastTokenId}</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            {config && (
+              <WalletSection
+                config={config}
+                metadata={metadata}
+                mintedLookup={mintedLookup}
+                lookupStatus={lookupStatus}
+                lookupError={lookupError}
+                wagmiConfig={wagmiConfig}
+                onAddressChange={setWalletAddress}
+              />
+            )}
           </div>
         )}
       </main>
@@ -593,6 +535,136 @@ export default function App() {
         <span>Status Network Testnet</span>
         <span>PSK26</span>
       </footer>
+    </div>
+  );
+}
+
+type WalletSectionProps = {
+  config: Config;
+  metadata: NftMetadata | null;
+  mintedLookup: MintedLookup | null;
+  lookupStatus: "idle" | "loading" | "error";
+  lookupError: string | null;
+  wagmiConfig: ReturnType<typeof createConfig> | null;
+  onAddressChange: (address: string | null) => void;
+};
+
+function WalletSection({
+  config,
+  metadata,
+  mintedLookup,
+  lookupStatus,
+  lookupError,
+  wagmiConfig,
+  onAddressChange
+}: WalletSectionProps) {
+  if (!config.walletConnectProjectId) {
+    return (
+      <div className="wallet-panel">
+        <div className="wallet-title">Already minted?</div>
+        <div className="wallet-copy">
+          Wallet login is disabled until a WalletConnect project ID is configured.
+        </div>
+      </div>
+    );
+  }
+
+  if (!wagmiConfig) {
+    return (
+      <div className="wallet-panel">
+        <div className="wallet-title">Already minted?</div>
+        <div className="wallet-copy">Loading wallet connector...</div>
+      </div>
+    );
+  }
+
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <WalletPanel
+          metadata={metadata}
+          mintedLookup={mintedLookup}
+          lookupStatus={lookupStatus}
+          lookupError={lookupError}
+          onAddressChange={onAddressChange}
+        />
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+
+type WalletPanelProps = {
+  metadata: NftMetadata | null;
+  mintedLookup: MintedLookup | null;
+  lookupStatus: "idle" | "loading" | "error";
+  lookupError: string | null;
+  onAddressChange: (address: string | null) => void;
+};
+
+function WalletPanel({
+  metadata,
+  mintedLookup,
+  lookupStatus,
+  lookupError,
+  onAddressChange
+}: WalletPanelProps) {
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { open } = useWeb3Modal();
+
+  useEffect(() => {
+    if (isConnected && address) {
+      onAddressChange(getAddress(address));
+      return;
+    }
+    onAddressChange(null);
+  }, [address, isConnected, onAddressChange]);
+
+  return (
+    <div className="wallet-panel">
+      <div className="wallet-title">Already minted?</div>
+      <div className="wallet-copy">
+        Connect a wallet to check if you already hold PSK26.
+      </div>
+      <div className="wallet-buttons">
+        <button type="button" className="secondary" onClick={() => open()}>
+          {isConnected ? "Wallet options" : "Connect wallet"}
+        </button>
+        {isConnected && (
+          <button type="button" className="secondary" onClick={() => disconnect()}>
+            Disconnect
+          </button>
+        )}
+      </div>
+      {isConnected && address && (
+        <div className="wallet-meta">
+          <span>Connected: {getAddress(address)}</span>
+        </div>
+      )}
+      {lookupStatus === "loading" && <div className="muted">Checking mints...</div>}
+      {lookupStatus === "error" && lookupError && (
+        <div className="notice error">{lookupError}</div>
+      )}
+      {isConnected && mintedLookup && mintedLookup.count === 0 && (
+        <div className="notice warning">No mints found for this wallet.</div>
+      )}
+      {isConnected && mintedLookup && mintedLookup.count > 0 && metadata?.image && (
+        <div className="nft-preview">
+          <img src={metadata.image} alt={metadata.name || "NFT preview"} />
+          <div className="nft-details">
+            <div className="nft-title">{metadata.name || "PSK26 NFT"}</div>
+            {metadata.description && (
+              <div className="nft-description">{metadata.description}</div>
+            )}
+            <div className="nft-meta">
+              {mintedLookup.count} mint{mintedLookup.count === 1 ? "" : "s"} found
+            </div>
+            {mintedLookup.lastTokenId && (
+              <div className="nft-meta">Latest Token ID: {mintedLookup.lastTokenId}</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
