@@ -127,6 +127,47 @@ input:focus {
   gap: 18px;
 }
 
+.nft-preview {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(5, 7, 12, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nft-preview img {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+}
+
+.nft-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nft-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.nft-description {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.nft-meta {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 .minted-details {
   display: grid;
   gap: 12px;
@@ -197,6 +238,28 @@ button {
   box-shadow: 0 12px 30px rgba(0, 163, 255, 0.25);
 }
 
+.secondary {
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary:not(:disabled):hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 .reset {
   align-self: flex-start;
   background: transparent;
@@ -240,6 +303,51 @@ button {
   color: var(--muted);
 }
 
+.wallet-panel {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wallet-title {
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.wallet-copy {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.wallet-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wallet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent-2);
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+}
+
 .footer {
   margin-top: 24px;
   display: flex;
@@ -257,5 +365,9 @@ button {
 
   .title {
     font-size: 26px;
+  }
+
+  .nft-preview {
+    grid-template-columns: 1fr;
   }
 }
