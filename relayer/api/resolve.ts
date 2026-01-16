@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
 import { applyCors } from "./_cors.js";
+import { resolveEnsAddress } from "./_ens.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) {
@@ -15,12 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const mainnetRpc = process.env.MAINNET_RPC_URL || "https://cloudflare-eth.com";
-  const client = createPublicClient({
-    chain: mainnet,
-    transport: http(mainnetRpc)
-  });
-
-  const address = await client.getEnsAddress({ name });
+  const address = await resolveEnsAddress(name, mainnetRpc);
   if (!address) {
     res.status(404).json({ error: "ENS name not found" });
     return;

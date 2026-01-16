@@ -8,9 +8,9 @@ import {
   parseEventLogs
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet } from "viem/chains";
 import { applyCors } from "./_cors.js";
 import { PSK26_ABI } from "./_abi.js";
+import { resolveEnsAddress } from "./_ens.js";
 import { getValue, setValue } from "./_store.js";
 import { getClientIp, getTapKey, readJsonBody } from "./_utils.js";
 
@@ -177,12 +177,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const trimmed = value.trim();
     if (trimmed.toLowerCase().endsWith(".eth")) {
       const mainnetRpc = process.env.MAINNET_RPC_URL || "https://cloudflare-eth.com";
-      const ensClient = createPublicClient({
-        chain: mainnet,
-        transport: http(mainnetRpc)
-      });
-      const address = await ensClient.getEnsAddress({ name: trimmed });
-      return address ? getAddress(address) : null;
+      return await resolveEnsAddress(trimmed, mainnetRpc);
     }
 
     if (!isAddress(trimmed)) {
