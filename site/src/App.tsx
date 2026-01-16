@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAddress, isAddress } from "viem";
 
 type Config = {
@@ -17,6 +17,7 @@ type MintRecord = {
 };
 
 const EVENT_COPY = "ps.logos.co | Lisbon | 6-7 March 2026";
+const TAP_KEY_STORAGE = "psk26:tapKey";
 
 function buildMintKey(config: Config) {
   return `psk26:minted:${config.chainId}:${config.contractAddress.toLowerCase()}`;
@@ -25,6 +26,7 @@ function buildMintKey(config: Config) {
 export default function App() {
   const [config, setConfig] = useState<Config | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [tapKey, setTapKey] = useState("");
   const [recipientInput, setRecipientInput] = useState("");
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
   const [resolveStatus, setResolveStatus] = useState<"idle" | "resolving" | "resolved" | "error">("idle");
@@ -35,9 +37,21 @@ export default function App() {
 
   const resolveTimeout = useRef<number | null>(null);
 
-  const tapKey = useMemo(() => {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get("k") || "";
+    const fromQuery = params.get("k") || "";
+    const fromStorage = sessionStorage.getItem(TAP_KEY_STORAGE) || "";
+    const effectiveKey = fromQuery || fromStorage;
+
+    if (fromQuery) {
+      sessionStorage.setItem(TAP_KEY_STORAGE, fromQuery);
+      params.delete("k");
+      const nextQuery = params.toString();
+      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash}`;
+      window.history.replaceState({}, "", nextUrl);
+    }
+
+    setTapKey(effectiveKey);
   }, []);
 
   useEffect(() => {
@@ -153,7 +167,7 @@ export default function App() {
         window.clearTimeout(resolveTimeout.current);
       }
     };
-  }, [recipientInput, config, tapKey]);
+  }, [recipientInput, config]);
 
   const canMint =
     Boolean(config) &&
