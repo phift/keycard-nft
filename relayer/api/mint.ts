@@ -176,7 +176,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   async function resolveRecipient(value: string): Promise<`0x${string}` | null> {
     const trimmed = value.trim();
     if (trimmed.toLowerCase().endsWith(".eth")) {
-      const mainnetRpc = process.env.MAINNET_RPC_URL || "https://cloudflare-eth.com";
+      const mainnetRpc =
+        process.env.MAINNET_RPC_URLS || process.env.MAINNET_RPC_URL || "";
       return await resolveEnsAddress(trimmed, mainnetRpc);
     }
 

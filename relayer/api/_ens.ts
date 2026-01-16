@@ -1,11 +1,4 @@
-import {
-  createPublicClient,
-  getAddress,
-  http,
-  keccak256,
-  toBytes,
-  zeroAddress
-} from "viem";
+import { createPublicClient, getAddress, http, keccak256, toBytes, zeroAddress } from "viem";
 import { mainnet } from "viem/chains";
 
 const ENS_REGISTRY_ADDRESS =
@@ -48,47 +41,78 @@ function namehash(name: string): `0x${string}` {
   return node;
 }
 
+const DEFAULT_RPC_FALLBACKS = [
+  "https://cloudflare-eth.com",
+  "https://rpc.ankr.com/eth",
+  "https://eth.llamarpc.com"
+];
+
+function buildRpcList(rpcUrls?: string | string[]) {
+  const list =
+    typeof rpcUrls === "string"
+      ? rpcUrls.split(",").map((value) => value.trim())
+      : rpcUrls || [];
+
+  const combined = [...list, ...DEFAULT_RPC_FALLBACKS];
+  const seen = new Set<string>();
+  return combined.filter((value) => {
+    if (!value) {
+      return false;
+    }
+    if (seen.has(value)) {
+      return false;
+    }
+    seen.add(value);
+    return true;
+  });
+}
+
 export async function resolveEnsAddress(
   name: string,
-  rpcUrl: string
+  rpcUrls?: string | string[]
 ): Promise<`0x${string}` | null> {
   const cleaned = name.trim().toLowerCase();
   if (!cleaned.endsWith(".eth")) {
     return null;
   }
 
-  const client = createPublicClient({
-    chain: mainnet,
-    transport: http(rpcUrl)
-  });
+  const node = namehash(cleaned);
+  const rpcList = buildRpcList(rpcUrls);
 
-  try {
-    const node = namehash(cleaned);
-    const resolver = await client.readContract({
-      address: ENS_REGISTRY_ADDRESS,
-      abi: ENS_REGISTRY_ABI,
-      functionName: "resolver",
-      args: [node]
+  for (const rpcUrl of rpcList) {
+    const client = createPublicClient({
+      chain: mainnet,
+      transport: http(rpcUrl)
     });
 
-    if (!resolver || resolver === zeroAddress) {
-      return null;
+    try {
+      const resolver = await client.readContract({
+        address: ENS_REGISTRY_ADDRESS,
+        abi: ENS_REGISTRY_ABI,
+        functionName: "resolver",
+        args: [node]
+      });
+
+      if (!resolver || resolver === zeroAddress) {
+        return null;
+      }
+
+      const address = await client.readContract({
+        address: resolver,
+        abi: ENS_RESOLVER_ABI,
+        functionName: "addr",
+        args: [node]
+      });
+
+      if (!address || address === zeroAddress) {
+        return null;
+      }
+
+      return getAddress(address);
+    } catch (error) {
+      console.error(`ENS resolve failed via ${rpcUrl}`, error);
     }
-
-    const address = await client.readContract({
-      address: resolver,
-      abi: ENS_RESOLVER_ABI,
-      functionName: "addr",
-      args: [node]
-    });
-
-    if (!address || address === zeroAddress) {
-      return null;
-    }
-
-    return getAddress(address);
-  } catch (error) {
-    console.error("ENS resolve failed", error);
-    return null;
   }
+
+  return null;
 }

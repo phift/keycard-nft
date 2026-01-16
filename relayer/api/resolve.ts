@@ -13,7 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const mainnetRpc = process.env.MAINNET_RPC_URL || "https://cloudflare-eth.com";
+  const mainnetRpc =
+    process.env.MAINNET_RPC_URLS || process.env.MAINNET_RPC_URL || "";
   const address = await resolveEnsAddress(name, mainnetRpc);
   if (!address) {
     res.status(404).json({ error: "ENS name not found" });
