@@ -9,10 +9,10 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
-import { applyCors } from "./_cors";
-import { PSK26_ABI } from "./_abi";
-import { getValue, setValue } from "./_store";
-import { getClientIp, getTapKey, readJsonBody } from "./_utils";
+import { applyCors } from "./_cors.js";
+import { PSK26_ABI } from "./_abi.js";
+import { getValue, setValue } from "./_store.js";
+import { getClientIp, getTapKey, readJsonBody } from "./_utils.js";
 
 const REQUEST_PREFIX = "psk26:req:";
 const RATE_PREFIX = "psk26:rate:";
