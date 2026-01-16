@@ -10,6 +10,9 @@ const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY || "";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.20",
+  paths: {
+    sources: "./src"
+  },
   networks: {
     statusTestnet: {
       url: STATUS_RPC_URL,
